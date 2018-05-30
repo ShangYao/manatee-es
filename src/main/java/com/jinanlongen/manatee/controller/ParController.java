@@ -22,9 +22,10 @@ public class ParController {
   @Autowired
   private SnService sn;
 
-  @RequestMapping("par/all")
-  public String syn() {
+  @RequestMapping("par/synAll")
+  public String synAll() {
     jd.synJdCategoryAttrs();
+    sn.synSnCategoryAttrs();
     return "ok";
   }
 
@@ -41,7 +42,7 @@ public class ParController {
 
   @RequestMapping("par/sn")
   public long synSnCategoryAttrs() {
-    sn.synSnCategoryAttrs();
+
     return parValueRep.count();
   }
 

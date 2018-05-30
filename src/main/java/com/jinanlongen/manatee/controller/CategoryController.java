@@ -25,9 +25,11 @@ public class CategoryController {
 
   }
 
-  @RequestMapping("category/all")
-  public Iterable<CategoryDoc> all() {
-    return categoryRep.findAll();
+  @RequestMapping("category/synAll")
+  public String synAll() {
+    jd.synAllJdCategory();
+    sn.synAllSnCategory();
+    return "ok!";
   }
 
   @RequestMapping("category/{id}")
