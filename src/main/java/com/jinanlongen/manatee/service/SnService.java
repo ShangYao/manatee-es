@@ -8,11 +8,12 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.jinanlongen.manatee.domain.CategoryDoc;
 import com.jinanlongen.manatee.domain.ParDoc;
 import com.jinanlongen.manatee.domain.ParValueDoc;
-import com.jinanlongen.manatee.domain.Shop;
+import com.jinanlongen.manatee.domain.Store;
 import com.jinanlongen.manatee.repository.CategoryRep;
 import com.jinanlongen.manatee.repository.ParRep;
 import com.jinanlongen.manatee.repository.ParValueRep;
@@ -35,18 +36,19 @@ public class SnService {
   private ParValueRep valueRep;
 
   // sn 类目属性
+  @Async
   public void synSnCategoryAttrs() {
     List<CategoryDoc> docs = getSnAllCategoryDoc();
     Map<String, List<CategoryDoc>> map =
-        docs.stream().collect(Collectors.groupingBy(i -> i.getShopId()));
+        docs.stream().collect(Collectors.groupingBy(i -> i.getStore_id()));
     Set<String> keys = map.keySet();
-    for (String shopId : keys) {
-      synCategoryAttrsByShop(shopId, map.get(shopId));
+    for (String storeId : keys) {
+      synCategoryAttrsByShop(storeId, map.get(storeId));
     }
   }
 
-  private void synCategoryAttrsByShop(String shopId, List<CategoryDoc> list) {
-    Shop shop = shopRep.findById(shopId).get();
+  private void synCategoryAttrsByShop(String storeId, List<CategoryDoc> list) {
+    Store shop = shopRep.findById(storeId).get();
     logger.info("店铺{},同步类目{}", shop.getName(), list.size());
     SnUtils sn = new SnUtils(shop);
     List<ItemparametersQuery> parameters;
@@ -64,7 +66,7 @@ public class SnService {
   private void synOneItemparameter(ItemparametersQuery parameter) {
     ParDoc par = new ParDoc().parsFromSnAttrs(parameter);
     parRep.save(par);
-    if (!par.getPar_type().equals("3")) {
+    if (!par.getInput_type().equals("3")) {
       List<ParValueDoc> values = new ParValueDoc().parsFromSnAttrs(parameter);
       for (ParValueDoc value : values) {
         valueRep.save(value);
@@ -73,7 +75,9 @@ public class SnService {
   }
 
   // 同步sn所有店铺的类目
+  @Async
   public void synAllSnCategory() {
+    logger.info(Thread.currentThread().getName() + "----sn------异步：>");
     List<CategoryDoc> categoryDocs = getSnAllCategoryDoc();
     for (CategoryDoc categoryDoc : categoryDocs) {
       categoryRep.save(categoryDoc);
@@ -82,13 +86,13 @@ public class SnService {
 
   private List<CategoryDoc> getSnAllCategoryDoc() {
     logger.info("开始同步sn所有店铺的类目信息");
-    List<Shop> list = shopRep.findSnShop();
+    List<Store> list = shopRep.findSnShop();
     SnUtils sn;
     List<CategoryQuery> categoryList;
     List<CategoryDoc> allCategory = new ArrayList<CategoryDoc>();
     List<String> categoryIds = new ArrayList<String>();
     CategoryQueryRequest request;
-    for (Shop shop : list) {
+    for (Store shop : list) {
       sn = new SnUtils(shop);
       request = new CategoryQueryRequest();
       categoryList = sn.categoryQuery(request);
@@ -99,13 +103,19 @@ public class SnService {
       } else {
         for (CategoryQuery category : categoryList) {
           if (!categoryIds.contains(category.getCategoryCode())) {
-            allCategory.add(new CategoryDoc().parseFromSnCategory(category, shop.getShopId()));
+            allCategory.add(new CategoryDoc().parseFromSnCategory(category, shop.getId()));
             categoryIds.add(category.getCategoryCode());
           }
         }
       }
     }
     return allCategory;
+  }
+
+  @Async
+  public void synAllSn() {
+    logger.info(Thread.currentThread().getName() + "----sn------异步：>");
+    synSnCategoryAttrs();
   }
 
 }

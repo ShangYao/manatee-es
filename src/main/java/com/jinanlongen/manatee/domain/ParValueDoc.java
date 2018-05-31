@@ -20,6 +20,13 @@ public class ParValueDoc {
   private EcpEnum ecp_id;
   private String par_id;
   private int idx;
+  private String store_id;
+
+  @Override
+  public String toString() {
+    return "ParValueDoc [id=" + id + ", name=" + name + ", code=" + code + ", ecp_id=" + ecp_id
+        + ", par_id=" + par_id + ", idx=" + idx + "]";
+  }
 
   public ParValueDoc parseFromJdAttrsValue(CategoryAttrValueJos attrValue) {
     this.id = "JD#" + attrValue.getId();
@@ -28,6 +35,13 @@ public class ParValueDoc {
     this.ecp_id = EcpEnum.JD;
     this.par_id = "JD#" + attrValue.getAttributeId();
     this.idx = attrValue.getIndexId();
+    return this;
+
+  }
+
+  public ParValueDoc parseFromJdAttrsValue(CategoryAttrValueJos attrValue, String storeId) {
+    this.parseFromJdAttrsValue(attrValue);
+    this.store_id = storeId;
     return this;
 
   }
@@ -47,6 +61,16 @@ public class ParValueDoc {
       values.add(value);
     }
     return values;
+  }
+
+
+
+  public String getStore_id() {
+    return store_id;
+  }
+
+  public void setStore_id(String store_id) {
+    this.store_id = store_id;
   }
 
   public String getId() {

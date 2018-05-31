@@ -23,7 +23,7 @@ import com.jd.open.api.sdk.response.list.CategoryReadFindValuesByIdJosResponse;
 import com.jd.open.api.sdk.response.list.PopVenderCenerVenderBrandQueryResponse;
 import com.jd.open.api.sdk.response.list.VenderBrandPubInfo;
 import com.jd.open.api.sdk.response.ware.WareWriteUpdateWareResponse;
-import com.jinanlongen.manatee.domain.Shop;
+import com.jinanlongen.manatee.domain.Store;
 
 /**
  * 类说明
@@ -36,7 +36,7 @@ public class JdUtils {
   private static Logger logger = LoggerFactory.getLogger(JdUtils.class);
   public static final String SERVER_URL = "https://api.jd.com/routerjson";
 
-  public JdUtils(Shop shop) {
+  public JdUtils(Store shop) {
     this.accessToken = shop.getAccessToken();
     this.appKey = shop.getAppKey();
     this.appSecret = shop.getAppSecret();

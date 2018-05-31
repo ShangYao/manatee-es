@@ -18,6 +18,13 @@ public class ParDoc {
   private EcpEnum ecp_id;
   private String category_id;
 
+  @Override
+  public String toString() {
+    return "ParDoc [id=" + id + ", code=" + code + ", name=" + name + ", par_type=" + par_type
+        + ", input_type=" + input_type + ", unit=" + unit + ", ecp_id=" + ecp_id + ", category_id="
+        + category_id + "]";
+  }
+
   // private String status;
   public ParDoc parsFromJdAttrs(CategoryAttr categoryAttr) {
     this.id = "JD#" + categoryAttr.getCategoryAttrId();

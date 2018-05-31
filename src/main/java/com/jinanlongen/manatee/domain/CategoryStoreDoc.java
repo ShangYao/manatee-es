@@ -16,11 +16,11 @@ public class CategoryStoreDoc {
   private String category_Name;
   private EcpEnum ecp_id;
 
-  public CategoryStoreDoc paseFromCategoryAndStore(Category jdcategory, Shop shop) {
-    this.id = "JD#" + shop.getShopId() + "#" + jdcategory.getId();
-    this.store_id = shop.getShopId();
-    this.store_name = shop.getName();
-    this.category_id = jdcategory.getId() + "";
+  public CategoryStoreDoc paseFromCategoryAndStore(Category jdcategory, Store store) {
+    this.id = store.getId() + "#" + jdcategory.getId();
+    this.store_id = store.getId();
+    this.store_name = store.getName();
+    this.category_id = "JD#" + jdcategory.getId();
     this.category_Name = jdcategory.getName();
     this.ecp_id = EcpEnum.JD;
     return this;

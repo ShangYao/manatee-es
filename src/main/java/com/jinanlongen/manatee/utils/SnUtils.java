@@ -5,7 +5,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.jinanlongen.manatee.domain.Shop;
+import com.jinanlongen.manatee.domain.Store;
 import com.jinanlongen.manatee.repository.ShopRep;
 import com.suning.api.DefaultSuningClient;
 import com.suning.api.entity.custom.NewbrandQueryRequest;
@@ -37,7 +37,7 @@ public class SnUtils {
   @Autowired
   ShopRep shopRep;
 
-  public SnUtils(Shop shop) {
+  public SnUtils(Store shop) {
     this.appKey = shop.getAppKey();
     this.appSecret = shop.getAppSecret();
     this.client = new DefaultSuningClient(SERVER_URL, appKey, appSecret);

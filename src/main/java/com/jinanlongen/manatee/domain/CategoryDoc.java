@@ -2,7 +2,6 @@ package com.jinanlongen.manatee.domain;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
 import com.jd.open.api.sdk.domain.category.Category;
 import com.jinanlongen.manatee.enums.EcpEnum;
 import com.suning.api.entity.item.CategoryQueryResponse.CategoryQuery;
@@ -21,8 +20,7 @@ public class CategoryDoc {
   private boolean is_leaf;
   private String status;
   private String path;
-  @Field(fielddata = false)
-  private String shopId;
+  private String store_id;
 
   public CategoryDoc parseFromJdCategory(Category category) {
     this.id = "JD#" + category.getId();
@@ -38,9 +36,9 @@ public class CategoryDoc {
 
   }
 
-  public CategoryDoc parseFromJdCategory(Category category, String shopId) {
+  public CategoryDoc parseFromJdCategory(Category category, String storeId) {
     this.parseFromJdCategory(category);
-    this.setShopId(shopId);
+    this.setStore_id(storeId);
     return this;
 
   }
@@ -59,19 +57,20 @@ public class CategoryDoc {
     return this;
   }
 
-  public CategoryDoc parseFromSnCategory(CategoryQuery category, String shopId) {
+  public CategoryDoc parseFromSnCategory(CategoryQuery category, String storeId) {
     this.parseFromSnCategory(category);
-    this.setShopId(shopId);
+    this.setStore_id(storeId);
     return this;
   }
 
 
-  public String getShopId() {
-    return shopId;
+
+  public String getStore_id() {
+    return store_id;
   }
 
-  public void setShopId(String shopId) {
-    this.shopId = shopId;
+  public void setStore_id(String store_id) {
+    this.store_id = store_id;
   }
 
   public String getPath() {
