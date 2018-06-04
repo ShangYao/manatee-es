@@ -3,18 +3,16 @@ package com.jinanlongen.manatee.domain;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import com.jd.open.api.sdk.domain.category.Category;
-import com.jinanlongen.manatee.enums.EcpEnum;
 import com.suning.api.entity.item.CategoryQueryResponse.CategoryQuery;
 
-@Document(indexName = "manatee", type = "category", shards = 2, replicas = 1,
-    refreshInterval = "-1")
+@Document(indexName = "par", type = "category")
 public class CategoryDoc {
   @Id
   private String id;
-  private EcpEnum ecp_id;
+  private Ecp ecp;
   private String name;
   private String code;
-  private String fid;
+  private String pcode;
   private int level;
   private int idx;
   private boolean is_leaf;
@@ -24,10 +22,10 @@ public class CategoryDoc {
 
   public CategoryDoc parseFromJdCategory(Category category) {
     this.id = "JD#" + category.getId();
-    this.ecp_id = EcpEnum.JD;
     this.name = category.getName();
+    this.ecp = new Ecp("JD", "京东");
     this.code = category.getId() + "";
-    this.fid = category.getFid() == 0 ? null : "JD#" + category.getFid();
+    this.pcode = category.getFid() == 0 ? null : "" + category.getFid();
     this.level = category.getLev();
     this.idx = category.getIndexId();
     this.status = category.getStatus();
@@ -45,13 +43,10 @@ public class CategoryDoc {
 
   public CategoryDoc parseFromSnCategory(CategoryQuery category) {
     this.id = "SN#" + category.getCategoryCode();
-    this.ecp_id = EcpEnum.SN;
     this.name = category.getCategoryName();
     this.code = category.getCategoryCode();
-    // this.fid = category.getFid() == 0 ? null : "JD#" + category.getFid();
+    this.ecp = new Ecp("SN", "苏宁");
     this.level = Integer.parseInt(category.getGrade());
-    // this.idx = category.get;
-    // this.status = category.getStatus();
     this.is_leaf = category.getIsBottom().equals("X") ? true : false;
     this.path = category.getDescPath();
     return this;
@@ -64,6 +59,14 @@ public class CategoryDoc {
   }
 
 
+
+  public Ecp getEcp() {
+    return ecp;
+  }
+
+  public void setEcp(Ecp ecp) {
+    this.ecp = ecp;
+  }
 
   public String getStore_id() {
     return store_id;
@@ -115,12 +118,14 @@ public class CategoryDoc {
     this.code = code;
   }
 
-  public String getFid() {
-    return fid;
+
+
+  public String getPcode() {
+    return pcode;
   }
 
-  public void setFid(String fid) {
-    this.fid = fid;
+  public void setPcode(String pcode) {
+    this.pcode = pcode;
   }
 
   public int getLevel() {
@@ -139,13 +144,7 @@ public class CategoryDoc {
     this.idx = idx;
   }
 
-  public EcpEnum getEcp_id() {
-    return ecp_id;
-  }
 
-  public void setEcp_id(EcpEnum ecp_id) {
-    this.ecp_id = ecp_id;
-  }
 
   public boolean isIs_leaf() {
     return is_leaf;

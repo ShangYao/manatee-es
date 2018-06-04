@@ -33,8 +33,7 @@ public class RepTest {
     Page<ParDoc> pars = parRep.getSaleAttr(pageable);
     List<ParDoc> docs = pars.getContent();
     // Set<String> cSet = docs.stream().map(i -> i.getCategory_id()).collect(Collectors.toSet());
-    Map<String, List<ParDoc>> m =
-        docs.stream().collect(Collectors.groupingBy(i -> i.getCategory_id()));
+    Map<String, List<ParDoc>> m = docs.stream().collect(Collectors.groupingBy(i -> i.getId()));
     Set<String> cset = m.keySet();
     Iterable<CategoryStoreDoc> cs = categoryStoreRep.findAll();
     Iterator<CategoryStoreDoc> it = cs.iterator();
@@ -50,7 +49,7 @@ public class RepTest {
       csOfStore = csm.get(id);
       System.out.println(id + ":" + csOfStore.size());
       for (CategoryStoreDoc categoryStoreDoc : csOfStore) {
-        if (cset.contains(categoryStoreDoc.getCategory_id())) {
+        if (cset.contains(categoryStoreDoc.getCategory_code())) {
 
         }
       }

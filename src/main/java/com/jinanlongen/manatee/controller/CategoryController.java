@@ -35,7 +35,7 @@ public class CategoryController {
     logger.info(Thread.currentThread().getName() + "----------main：>");
     jd.synAllJdCategory();
     sn.synAllSnCategory();
-    return "执行中........";
+    return "同步类目执行中........";
   }
 
 

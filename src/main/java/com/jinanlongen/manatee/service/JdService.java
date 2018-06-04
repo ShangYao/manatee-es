@@ -19,12 +19,11 @@ import com.jd.open.api.sdk.domain.list.CategoryAttrValueReadService.CategoryAttr
 import com.jinanlongen.manatee.domain.CategoryDoc;
 import com.jinanlongen.manatee.domain.CategoryStoreDoc;
 import com.jinanlongen.manatee.domain.ParDoc;
-import com.jinanlongen.manatee.domain.ParValueDoc;
+import com.jinanlongen.manatee.domain.ParValue;
 import com.jinanlongen.manatee.domain.Store;
 import com.jinanlongen.manatee.repository.CategoryRep;
 import com.jinanlongen.manatee.repository.CategoryStoreRep;
 import com.jinanlongen.manatee.repository.ParRep;
-import com.jinanlongen.manatee.repository.ParValueRep;
 import com.jinanlongen.manatee.repository.ShopRep;
 import com.jinanlongen.manatee.utils.JdUtils;
 
@@ -38,61 +37,58 @@ public class JdService {
   @Autowired
   private ParRep parRep;
   @Autowired
-  private ParValueRep valueRep;
-  @Autowired
   private CategoryStoreRep categoryStoreRep;
 
-
+  // 同步jd所有店铺的类目
+  @Async
+  public void synAllJdCategory() {
+    logger.info(Thread.currentThread().getName() + "异步：同步jd所有店铺的类目>");
+    List<CategoryDoc> categoryDocs = getJdAllCategoryDoc(true);
+    for (CategoryDoc categoryDoc : categoryDocs) {
+      categoryDoc = generatePath(categoryDoc, categoryDocs);
+      categoryRep.save(categoryDoc);
+    }
+    logger.info(Thread.currentThread().getName() + "同步jd所有店铺的类目完成");
+  }
 
   // jd saleAttr
+  @Async
   public void synSaleAttr() {
-    Map<String, List<ParDoc>> salePars = featchSalePars();
+    logger.info("开始保存京东类目销售属性........");
+    Map<String, List<ParDoc>> salePars = featchSalePars();// 销售属性按分类 分组
     Set<String> categorys = salePars.keySet();
 
-    Map<String, List<CategoryStoreDoc>> categoryStores = featchCategoryStores();
+    Map<String, List<CategoryStoreDoc>> categoryStores = featchCategoryStores();// 找出店铺开通的类目
     Set<String> storeIds = categoryStores.keySet();
 
     List<CategoryStoreDoc> csOfStore;
     JdUtils jdu;
+    Store store;
     for (String id : storeIds) {
-      jdu = new JdUtils(shopRep.findById(id).get());
+      store = shopRep.findById(id).get();
+      jdu = new JdUtils(store);
       csOfStore = categoryStores.get(id);
       for (CategoryStoreDoc categoryStoreDoc : csOfStore) {
-        if (categorys.contains(categoryStoreDoc.getCategory_id())) {
-
-
-          saveAttrValues(jdu, salePars.get(categoryStoreDoc.getCategory_id()), id);
-
+        if (categorys.contains(categoryStoreDoc.getCategory_code())) {
+          saveAttrValues(jdu, salePars.get(categoryStoreDoc.getCategory_code()), store);
         }
       }
     }
+    logger.info("保存类目销售属性完成");
   }
 
-  private void saveAttrValues(JdUtils jdu, List<ParDoc> list, String storeid) {
-    // TODO Auto-generated method stub
-    logger.info("保存类目属性{}", list.size());
-    List<CategoryAttrValueJos> CategoryAttrValues;
-    for (ParDoc parDoc : list) {
-      CategoryAttrValues = jdu.findValuesByAttrIdJos(Long.parseLong(parDoc.getCode()));
-      saveAttrValues(CategoryAttrValues, storeid);
+  private void saveAttrValues(JdUtils jdu, List<ParDoc> list, Store store) {
+    ParDoc salePar;
+    List<CategoryAttrValueJos> AttrValues;
+    for (ParDoc par : list) {
+      salePar = par.generateSalePar(par, store);
+      AttrValues = jdu.findValuesByAttrIdJos(Long.parseLong(par.getCode()));
+      par.setValues(generateValues(AttrValues));
+      parRep.save(salePar);
     }
   }
 
-  private void saveAttrValues(List<CategoryAttrValueJos> CategoryAttrValues) {
-    ParValueDoc value;
-    for (CategoryAttrValueJos categoryAttrValueJos : CategoryAttrValues) {
-      value = new ParValueDoc().parseFromJdAttrsValue(categoryAttrValueJos);
-      valueRep.save(value);
-    }
-  }
 
-  private void saveAttrValues(List<CategoryAttrValueJos> CategoryAttrValues, String storeid) {
-    ParValueDoc value;
-    for (CategoryAttrValueJos categoryAttrValueJos : CategoryAttrValues) {
-      value = new ParValueDoc().parseFromJdAttrsValue(categoryAttrValueJos, storeid);
-      valueRep.save(value);
-    }
-  }
 
   private Map<String, List<CategoryStoreDoc>> featchCategoryStores() {
     Iterable<CategoryStoreDoc> cs = categoryStoreRep.findAll();
@@ -110,7 +106,7 @@ public class JdService {
     Pageable pageable = PageRequest.of(0, 2000);
     List<ParDoc> pars = parRep.getSaleAttr(pageable).getContent();
     Map<String, List<ParDoc>> salePars =
-        pars.stream().collect(Collectors.groupingBy(i -> i.getCategory_id()));
+        pars.stream().collect(Collectors.groupingBy(i -> (i.getCategory().get(0).getCode())));
     return salePars;
   }
 
@@ -124,6 +120,7 @@ public class JdService {
     for (String storeId : keys) {
       synCategoryAttrsByShop(storeId, map.get(storeId));
     }
+    logger.info("同步京东类目属性，属性值完成");
   }
 
   private void synCategoryAttrsByShop(String storeId, List<CategoryDoc> list) {
@@ -138,27 +135,50 @@ public class JdService {
       }
       List<CategoryAttr> attrs = jdu.findAttrsByCategoryId(Long.parseLong(categoryDoc.getCode()));
       for (CategoryAttr categoryAttr : attrs) {
-        par = new ParDoc().parsFromJdAttrs(categoryAttr);
-        parRep.save(par);
+        par = new ParDoc().parsFromJdAttrs(categoryAttr, shop, categoryDoc);
         if (categoryAttr.getInputType() != 3 && categoryAttr.getAttributeType() != 4) {// 非可输入类型，非销售属性
           AttrValues = jdu.findValuesByAttrIdJos(Long.parseLong(par.getCode()));
-          saveAttrValues(AttrValues);
+          par.setValues(generateValues(AttrValues));
         }
+        parRep.save(par);
       }
     }
-    logger.info("同步京东类目属性完成");
+
+  }
+
+  private List<ParValue> generateValues(List<CategoryAttrValueJos> CategoryAttrValues) {
+    List<ParValue> values = new ArrayList<ParValue>();
+    for (CategoryAttrValueJos categoryAttrValueJos : CategoryAttrValues) {
+      values.add(new ParValue().generate(categoryAttrValueJos));
+    }
+    return values;
   }
 
 
 
-  // 同步jd所有店铺的类目
-  @Async
-  public void synAllJdCategory() {
-    logger.info(Thread.currentThread().getName() + "-----jd-----异步：>");
-    List<CategoryDoc> categoryDocs = getJdAllCategoryDoc(true);
-    for (CategoryDoc categoryDoc : categoryDocs) {
-      categoryRep.save(categoryDoc);
+  private CategoryDoc generatePath(CategoryDoc categoryDoc, List<CategoryDoc> categoryDocs) {
+    if (categoryDoc.getLevel() == 1) {
+      categoryDoc.setPath(categoryDoc.getName());
+    } else if (categoryDoc.getLevel() == 2) {
+      CategoryDoc fCategoryDoc = getFCategoryDoc(categoryDoc.getPcode(), categoryDocs);
+      categoryDoc.setPath(fCategoryDoc.getName() + "|" + categoryDoc.getName());
+    } else if (categoryDoc.getLevel() == 3) {
+      CategoryDoc fCategoryDoc = getFCategoryDoc(categoryDoc.getPcode(), categoryDocs);
+      CategoryDoc topCategoryDoc = getFCategoryDoc(fCategoryDoc.getPcode(), categoryDocs);
+      categoryDoc.setPath(
+          topCategoryDoc.getName() + "|" + fCategoryDoc.getName() + "|" + categoryDoc.getName());
     }
+
+    return categoryDoc;
+  }
+
+  private CategoryDoc getFCategoryDoc(String pcode, List<CategoryDoc> categoryDocs) {
+    for (CategoryDoc categoryDoc : categoryDocs) {
+      if (categoryDoc.getCode().equals(pcode)) {
+        return categoryDoc;
+      }
+    }
+    return new CategoryDoc();
   }
 
   private List<CategoryDoc> getJdAllCategoryDoc(boolean saveCategoryStoreDoc) {

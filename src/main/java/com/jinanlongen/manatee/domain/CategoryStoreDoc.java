@@ -5,14 +5,13 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import com.jd.open.api.sdk.domain.category.Category;
 import com.jinanlongen.manatee.enums.EcpEnum;
 
-@Document(indexName = "manatee", type = "category_store", shards = 2, replicas = 1,
-    refreshInterval = "-1")
+@Document(indexName = "par", type = "category_store")
 public class CategoryStoreDoc {
   @Id
   private String id;
   private String store_id;
   private String store_name;
-  private String category_id;
+  private String category_code;
   private String category_Name;
   private EcpEnum ecp_id;
 
@@ -20,7 +19,7 @@ public class CategoryStoreDoc {
     this.id = store.getId() + "#" + jdcategory.getId();
     this.store_id = store.getId();
     this.store_name = store.getName();
-    this.category_id = "JD#" + jdcategory.getId();
+    this.category_code = "" + jdcategory.getId();
     this.category_Name = jdcategory.getName();
     this.ecp_id = EcpEnum.JD;
     return this;
@@ -58,12 +57,14 @@ public class CategoryStoreDoc {
     this.store_name = store_name;
   }
 
-  public String getCategory_id() {
-    return category_id;
+
+
+  public String getCategory_code() {
+    return category_code;
   }
 
-  public void setCategory_id(String category_id) {
-    this.category_id = category_id;
+  public void setCategory_code(String category_code) {
+    this.category_code = category_code;
   }
 
   public EcpEnum getEcp_id() {

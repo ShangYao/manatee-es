@@ -1,12 +1,15 @@
 package com.jinanlongen.manatee.domain;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javax.persistence.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import com.jd.open.api.sdk.domain.list.CategoryAttrReadService.CategoryAttr;
-import com.jinanlongen.manatee.enums.EcpEnum;
 import com.suning.api.entity.item.ItemparametersQueryResponse.ItemparametersQuery;
+import com.suning.api.entity.item.ItemparametersQueryResponse.ParOption;
 
-@Document(indexName = "manatee", type = "par", shards = 2, replicas = 1, refreshInterval = "-1")
+@Document(indexName = "par", type = "par")
 public class ParDoc {
   @Id
   private String id;
@@ -15,38 +18,118 @@ public class ParDoc {
   private String par_type;// 1,关键属性(jd) ；2，不变属性(jd) ；3，可变属性(jd) ； 4，销售属性(jd) ；X，必填属性（sn）；可为空(sn)
   private String input_type;// 1,单选； 2，多选； 3，可输入
   private String unit;
-  private EcpEnum ecp_id;
-  private String category_id;
 
-  @Override
-  public String toString() {
-    return "ParDoc [id=" + id + ", code=" + code + ", name=" + name + ", par_type=" + par_type
-        + ", input_type=" + input_type + ", unit=" + unit + ", ecp_id=" + ecp_id + ", category_id="
-        + category_id + "]";
-  }
+  private List<Category> category;
+  private StoreEs store;
+  private Ecp ecp;
+  private List<ParValue> values;
 
-  // private String status;
-  public ParDoc parsFromJdAttrs(CategoryAttr categoryAttr) {
-    this.id = "JD#" + categoryAttr.getCategoryAttrId();
+  /**
+   * by jd
+   * 
+   * @param categoryAttr
+   * @param store
+   * @param categoryDoc
+   * @return
+   */
+
+  public ParDoc parsFromJdAttrs(CategoryAttr categoryAttr, Store store, CategoryDoc categoryDoc) {
+    this.id = "JD#" + categoryAttr.getCategoryId() + "#" + categoryAttr.getCategoryAttrId();
     this.code = categoryAttr.getCategoryAttrId() + "";
     this.name = categoryAttr.getAttName();
     this.input_type = categoryAttr.getInputType() + "";
     this.par_type = categoryAttr.getAttributeType() + "";
-    this.category_id = "JD#" + categoryAttr.getCategoryId();
-    this.ecp_id = EcpEnum.JD;
+    this.ecp = new Ecp("JD", "京东");
+    this.store = new StoreEs(store.getCode(), store.getName());
+    this.category = Arrays.asList(new Category().setCode(categoryDoc.getCode())
+        .setName(categoryDoc.getName()).setLevel(categoryDoc.getLevel())
+        .setPcode(categoryDoc.getPcode()).setPath(categoryDoc.getPath()));
     return this;
   }
 
-  public ParDoc parsFromSnAttrs(ItemparametersQuery categoryAttr) {
+  public ParDoc generateSalePar(ParDoc par, Store store) {
+    this.id = par.getId().replace(par.getCode(), store.getCode() + "#" + par.getCode());
+    this.code = par.getCode();
+    this.name = par.getName();
+    this.input_type = par.getInput_type();
+    this.par_type = par.getPar_type();
+    this.ecp = par.getEcp();
+    this.store = new StoreEs(store.getCode(), store.getName());
+    this.category = par.getCategory();
+
+    return this;
+  }
+
+  /**
+   * by suning
+   * 
+   * @param categoryAttr
+   * @param store
+   * @param categoryDoc
+   * @return
+   */
+  public ParDoc parsFromSnAttrs(ItemparametersQuery categoryAttr, Store store,
+      CategoryDoc categoryDoc) {
     this.id = "SN#" + categoryAttr.getCategoryCode() + "#" + categoryAttr.getParCode();
     this.code = categoryAttr.getParCode() + "";
     this.name = categoryAttr.getParName();
     this.input_type = categoryAttr.getParType();
     this.par_type = categoryAttr.getIsMust();
-    this.category_id = "SN#" + categoryAttr.getCategoryCode();
-    this.ecp_id = EcpEnum.SN;
     this.unit = categoryAttr.getParUnit();
+    this.ecp = new Ecp("SN", "苏宁");
+    if (categoryAttr.getParType().equals("3")) {
+      this.values = generateParvalues(categoryAttr.getParOption());
+    }
+    this.store = new StoreEs(store.getCode(), store.getName());
+    this.category = Arrays.asList(new Category().setCode(categoryDoc.getCode())
+        .setName(categoryDoc.getName()).setLevel(categoryDoc.getLevel())
+        .setPcode(categoryDoc.getPcode()).setPath(categoryDoc.getPath()));
     return this;
+  }
+
+  private List<ParValue> generateParvalues(List<ParOption> parOptions) {
+    if (parOptions == null || parOptions.size() == 0) {
+      return null;
+    }
+    List<ParValue> values = new ArrayList<ParValue>();
+    ParValue parvalue;
+    for (ParOption option : parOptions) {
+      parvalue = new ParValue().generate(option);
+      values.add(parvalue);
+    }
+    return values;
+  }
+
+  public List<Category> getCategory() {
+    return category;
+  }
+
+  public void setCategory(List<Category> category) {
+    this.category = category;
+  }
+
+  public StoreEs getStore() {
+    return store;
+  }
+
+  public void setStore(StoreEs store) {
+    this.store = store;
+  }
+
+  public Ecp getEcp() {
+    return ecp;
+  }
+
+  public void setEcp(Ecp ecp) {
+    this.ecp = ecp;
+  }
+
+  public List<ParValue> getValues() {
+    return values;
+  }
+
+  public void setValues(List<ParValue> values) {
+    this.values = values;
   }
 
   public String getInput_type() {
@@ -97,24 +180,6 @@ public class ParDoc {
 
   public void setUnit(String unit) {
     this.unit = unit;
-  }
-
-
-
-  public EcpEnum getEcp_id() {
-    return ecp_id;
-  }
-
-  public void setEcp_id(EcpEnum ecp_id) {
-    this.ecp_id = ecp_id;
-  }
-
-  public String getCategory_id() {
-    return category_id;
-  }
-
-  public void setCategory_id(String category_id) {
-    this.category_id = category_id;
   }
 
 

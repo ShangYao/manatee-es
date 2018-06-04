@@ -5,7 +5,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.jinanlongen.manatee.repository.ParRep;
-import com.jinanlongen.manatee.repository.ParValueRep;
 import com.jinanlongen.manatee.service.JdService;
 import com.jinanlongen.manatee.service.SnService;
 
@@ -14,8 +13,6 @@ import com.jinanlongen.manatee.service.SnService;
 public class ParController {
   @Autowired
   private ParRep parRep;
-  @Autowired
-  private ParValueRep parValueRep;
   @Autowired
   private JdService jd;
   @Autowired
@@ -42,12 +39,6 @@ public class ParController {
     return parRep.count();
   }
 
-
-
-  @RequestMapping("parvalue/count")
-  public long valueCount() {
-    return parValueRep.count();
-  }
 
 
 }
