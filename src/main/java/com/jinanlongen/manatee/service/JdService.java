@@ -1,6 +1,7 @@
 package com.jinanlongen.manatee.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -103,24 +104,54 @@ public class JdService {
   }
 
   private Map<String, List<ParDoc>> featchSalePars() {
-    Pageable pageable = PageRequest.of(0, 2000);
+    Pageable pageable = PageRequest.of(0, 4000);
     List<ParDoc> pars = parRep.getSaleAttr(pageable).getContent();
+
     Map<String, List<ParDoc>> salePars =
-        pars.stream().collect(Collectors.groupingBy(i -> (i.getCategory().get(0).getCode())));
+        pars.stream().collect(Collectors.groupingBy(i -> (i.getCategory().getCode())));
     return salePars;
   }
 
   // 仅 保存 par ,par_value
   @Async
   public void synJdCategoryAttrs() {
-    List<CategoryDoc> docs = getJdAllCategoryDoc(false);// 不保存店铺类目关系
-    Map<String, List<CategoryDoc>> map =
-        docs.stream().collect(Collectors.groupingBy(i -> i.getStore_id()));
+    // List<CategoryDoc> docs = getJdAllCategoryDoc(false);// 不保存店铺类目关系
+    Pageable page = PageRequest.of(0, 2000);
+    // List<CategoryDoc> docs = categoryRep.getJdLeafCategory(page).getContent();// 不保存店铺类目关系
+    List<CategoryStoreDoc> cdList = categoryStoreRep.getJdCategoryStore(page).getContent();
+    Map<String, List<CategoryDoc>> map = generateCategoryDocStore(cdList);
+    // docs.stream().collect(Collectors.groupingBy(i -> i.getStore_id()));
     Set<String> keys = map.keySet();
     for (String storeId : keys) {
       synCategoryAttrsByShop(storeId, map.get(storeId));
     }
     logger.info("同步京东类目属性，属性值完成");
+  }
+
+  private Map<String, List<CategoryDoc>> generateCategoryDocStore(List<CategoryStoreDoc> cdList) {
+    List<CategoryStoreDoc> singleCategory = new ArrayList<CategoryStoreDoc>();
+    List<String> categoryCodes = new ArrayList<String>();
+    for (CategoryStoreDoc doc : cdList) {
+      if (!categoryCodes.contains(doc.getCategory_code())) {
+        categoryCodes.add(doc.getCategory_code());
+        singleCategory.add(doc);
+      }
+    }
+    Map<String, List<CategoryStoreDoc>> map =
+        singleCategory.stream().collect(Collectors.groupingBy(i -> i.getStore_id()));
+    Map<String, List<CategoryDoc>> categoryMap = new HashMap<>();
+    Set<String> storeCodes = map.keySet();
+    List<CategoryDoc> CategoryDocs;// = new ArrayList<CategoryDoc>();
+    List<CategoryStoreDoc> CategoryStoreDocs;// = new ArrayList<CategoryStoreDoc>();
+    for (String code : storeCodes) {
+      CategoryStoreDocs = map.get(code);
+      CategoryDocs = new ArrayList<CategoryDoc>();
+      for (CategoryStoreDoc categoryStoreDoc : CategoryStoreDocs) {
+        CategoryDocs.add((categoryRep.findById("JD#" + categoryStoreDoc.getCategory_code())).get());
+      }
+      categoryMap.put(code, CategoryDocs);
+    }
+    return categoryMap;
   }
 
   private void synCategoryAttrsByShop(String storeId, List<CategoryDoc> list) {
@@ -200,7 +231,7 @@ public class JdService {
           categoryStoreRep.save(categoryStore);// 保存店铺类目关系
         }
         if (!categoryIds.contains(jdcategory.getId())) {
-          allCategory.add(new CategoryDoc().parseFromJdCategory(jdcategory, shop.getId()));
+          allCategory.add(new CategoryDoc().parseFromJdCategory(jdcategory));
           categoryIds.add(jdcategory.getId());
         }
       }

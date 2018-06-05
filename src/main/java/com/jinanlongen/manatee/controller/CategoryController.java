@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.jinanlongen.manatee.domain.CategoryDoc;
 import com.jinanlongen.manatee.repository.CategoryRep;
+import com.jinanlongen.manatee.repository.CategoryStoreRep;
 import com.jinanlongen.manatee.service.JdService;
 import com.jinanlongen.manatee.service.SnService;
 
@@ -18,6 +19,8 @@ public class CategoryController {
   private Logger logger = LoggerFactory.getLogger(CategoryController.class);
   @Autowired
   private CategoryRep categoryRep;
+  @Autowired
+  private CategoryStoreRep categoryStoreRep;
   @Autowired
   private JdService jd;
   @Autowired
@@ -48,6 +51,13 @@ public class CategoryController {
   @RequestMapping("category/count")
   public long count() {
     return categoryRep.count();
+  }
+
+  @RequestMapping("category/deleteAll")
+  public String deleteAll() {
+    categoryRep.deleteAll();
+    categoryStoreRep.deleteAll();
+    return "成功删除";
   }
 
 

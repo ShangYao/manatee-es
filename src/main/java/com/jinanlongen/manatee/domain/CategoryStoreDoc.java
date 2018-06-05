@@ -4,8 +4,9 @@ import javax.persistence.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import com.jd.open.api.sdk.domain.category.Category;
 import com.jinanlongen.manatee.enums.EcpEnum;
+import com.suning.api.entity.item.CategoryQueryResponse.CategoryQuery;
 
-@Document(indexName = "par", type = "category_store")
+@Document(indexName = "partest", type = "category_store")
 public class CategoryStoreDoc {
   @Id
   private String id;
@@ -22,6 +23,16 @@ public class CategoryStoreDoc {
     this.category_code = "" + jdcategory.getId();
     this.category_Name = jdcategory.getName();
     this.ecp_id = EcpEnum.JD;
+    return this;
+  }
+
+  public CategoryStoreDoc paseFromCategoryAndStore(CategoryQuery category, Store store) {
+    this.id = store.getId() + "#" + category.getCategoryCode();
+    this.store_id = store.getId();
+    this.store_name = store.getName();
+    this.category_code = "" + category.getCategoryCode();
+    this.category_Name = category.getCategoryName();
+    this.ecp_id = EcpEnum.SN;
     return this;
   }
 

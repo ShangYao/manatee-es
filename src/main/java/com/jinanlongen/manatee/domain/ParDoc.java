@@ -1,7 +1,6 @@
 package com.jinanlongen.manatee.domain;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -9,7 +8,7 @@ import com.jd.open.api.sdk.domain.list.CategoryAttrReadService.CategoryAttr;
 import com.suning.api.entity.item.ItemparametersQueryResponse.ItemparametersQuery;
 import com.suning.api.entity.item.ItemparametersQueryResponse.ParOption;
 
-@Document(indexName = "par", type = "par")
+@Document(indexName = "partest", type = "par")
 public class ParDoc {
   @Id
   private String id;
@@ -17,9 +16,10 @@ public class ParDoc {
   private String name;
   private String par_type;// 1,关键属性(jd) ；2，不变属性(jd) ；3，可变属性(jd) ； 4，销售属性(jd) ；X，必填属性（sn）；可为空(sn)
   private String input_type;// 1,单选； 2，多选； 3，可输入
+  private boolean is_must;// ?
   private String unit;
 
-  private List<Category> category;
+  private Category category;
   private StoreEs store;
   private Ecp ecp;
   private List<ParValue> values;
@@ -34,27 +34,36 @@ public class ParDoc {
    */
 
   public ParDoc parsFromJdAttrs(CategoryAttr categoryAttr, Store store, CategoryDoc categoryDoc) {
-    this.id = "JD#" + categoryAttr.getCategoryId() + "#" + categoryAttr.getCategoryAttrId();
+    this.id = generateJdId(categoryAttr, store.getCode());
     this.code = categoryAttr.getCategoryAttrId() + "";
     this.name = categoryAttr.getAttName();
     this.input_type = categoryAttr.getInputType() + "";
     this.par_type = categoryAttr.getAttributeType() + "";
-    this.ecp = new Ecp("JD", "京东");
-    this.store = new StoreEs(store.getCode(), store.getName());
-    this.category = Arrays.asList(new Category().setCode(categoryDoc.getCode())
+    this.ecp = new Ecp("JD", "JD", "京东");
+    // this.store = new StoreEs(store.getId(), store.getCode(), store.getName());
+    this.category = new Category().setId(categoryDoc.getId()).setCode(categoryDoc.getCode())
         .setName(categoryDoc.getName()).setLevel(categoryDoc.getLevel())
-        .setPcode(categoryDoc.getPcode()).setPath(categoryDoc.getPath()));
+        .setPcode(categoryDoc.getPcode()).setPath(categoryDoc.getPath());
     return this;
   }
 
+  private String generateJdId(CategoryAttr categoryAttr, String storeCode) {
+    if (categoryAttr.getAttributeType() == 4) {
+      return "JD#" + categoryAttr.getCategoryId() + "#" + storeCode + "#"
+          + categoryAttr.getCategoryAttrId();
+    } else {
+      return "JD#" + categoryAttr.getCategoryId() + "#" + categoryAttr.getCategoryAttrId();
+    }
+  }
+
   public ParDoc generateSalePar(ParDoc par, Store store) {
-    this.id = par.getId().replace(par.getCode(), store.getCode() + "#" + par.getCode());
+    this.id = par.getCategory().getId() + "#" + store.getCode() + "#" + par.getCode();
     this.code = par.getCode();
     this.name = par.getName();
     this.input_type = par.getInput_type();
     this.par_type = par.getPar_type();
     this.ecp = par.getEcp();
-    this.store = new StoreEs(store.getCode(), store.getName());
+    this.store = new StoreEs(store.getId(), store.getCode(), store.getName());
     this.category = par.getCategory();
 
     return this;
@@ -68,22 +77,21 @@ public class ParDoc {
    * @param categoryDoc
    * @return
    */
-  public ParDoc parsFromSnAttrs(ItemparametersQuery categoryAttr, Store store,
-      CategoryDoc categoryDoc) {
-    this.id = "SN#" + categoryAttr.getCategoryCode() + "#" + categoryAttr.getParCode();
+  public ParDoc parsFromSnAttrs(ItemparametersQuery categoryAttr, CategoryDoc categoryDoc) {
+    this.id = "SN#" + categoryDoc.getCode() + "#" + categoryAttr.getParCode();
     this.code = categoryAttr.getParCode() + "";
     this.name = categoryAttr.getParName();
     this.input_type = categoryAttr.getParType();
-    this.par_type = categoryAttr.getIsMust();
+    this.is_must = (categoryAttr.getIsMust().equals("X")) ? true : false;
     this.unit = categoryAttr.getParUnit();
-    this.ecp = new Ecp("SN", "苏宁");
-    if (categoryAttr.getParType().equals("3")) {
+    this.ecp = new Ecp("SN", "SN", "苏宁");
+    if (!categoryAttr.getParType().equals("3")) {
       this.values = generateParvalues(categoryAttr.getParOption());
     }
-    this.store = new StoreEs(store.getCode(), store.getName());
-    this.category = Arrays.asList(new Category().setCode(categoryDoc.getCode())
+    // this.store = new StoreEs(store.getId(), store.getCode(), store.getName());
+    this.category = new Category().setId(categoryDoc.getId()).setCode(categoryDoc.getCode())
         .setName(categoryDoc.getName()).setLevel(categoryDoc.getLevel())
-        .setPcode(categoryDoc.getPcode()).setPath(categoryDoc.getPath()));
+        .setPcode(categoryDoc.getPcode()).setPath(categoryDoc.getPath());
     return this;
   }
 
@@ -100,11 +108,13 @@ public class ParDoc {
     return values;
   }
 
-  public List<Category> getCategory() {
+
+
+  public Category getCategory() {
     return category;
   }
 
-  public void setCategory(List<Category> category) {
+  public void setCategory(Category category) {
     this.category = category;
   }
 
@@ -114,6 +124,14 @@ public class ParDoc {
 
   public void setStore(StoreEs store) {
     this.store = store;
+  }
+
+  public boolean isIs_must() {
+    return is_must;
+  }
+
+  public void setIs_must(boolean is_must) {
+    this.is_must = is_must;
   }
 
   public Ecp getEcp() {

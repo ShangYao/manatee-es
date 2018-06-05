@@ -8,7 +8,6 @@ import com.jinanlongen.manatee.domain.ParDoc;
 
 public interface ParRep extends ElasticsearchRepository<ParDoc, String> {
   @Query(
-      value = "{\"bool\":{\"must\":[{\"term\":{\"ecp_id.keyword\":\"JD\"}},{\"term\":{\"par_type.keyword\":\"4\"}}] }  }")
+      value = "{\"bool\":{\"must\":[{\"term\":{\"ecp.code\":\"JD\"}},{\"term\":{\"par_type.keyword\":\"4\"}}] }  }")
   Page<ParDoc> getSaleAttr(Pageable pageable);
-
 }

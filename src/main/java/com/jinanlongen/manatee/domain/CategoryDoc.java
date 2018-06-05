@@ -5,7 +5,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import com.jd.open.api.sdk.domain.category.Category;
 import com.suning.api.entity.item.CategoryQueryResponse.CategoryQuery;
 
-@Document(indexName = "par", type = "category")
+@Document(indexName = "partest", type = "category")
 public class CategoryDoc {
   @Id
   private String id;
@@ -18,12 +18,11 @@ public class CategoryDoc {
   private boolean is_leaf;
   private String status;
   private String path;
-  private String store_id;
 
   public CategoryDoc parseFromJdCategory(Category category) {
     this.id = "JD#" + category.getId();
     this.name = category.getName();
-    this.ecp = new Ecp("JD", "京东");
+    this.ecp = new Ecp("JD", "JD", "京东");
     this.code = category.getId() + "";
     this.pcode = category.getFid() == 0 ? null : "" + category.getFid();
     this.level = category.getLev();
@@ -34,27 +33,15 @@ public class CategoryDoc {
 
   }
 
-  public CategoryDoc parseFromJdCategory(Category category, String storeId) {
-    this.parseFromJdCategory(category);
-    this.setStore_id(storeId);
-    return this;
-
-  }
 
   public CategoryDoc parseFromSnCategory(CategoryQuery category) {
     this.id = "SN#" + category.getCategoryCode();
     this.name = category.getCategoryName();
     this.code = category.getCategoryCode();
-    this.ecp = new Ecp("SN", "苏宁");
+    this.ecp = new Ecp("SN", "SN", "苏宁");
     this.level = Integer.parseInt(category.getGrade());
     this.is_leaf = category.getIsBottom().equals("X") ? true : false;
     this.path = category.getDescPath();
-    return this;
-  }
-
-  public CategoryDoc parseFromSnCategory(CategoryQuery category, String storeId) {
-    this.parseFromSnCategory(category);
-    this.setStore_id(storeId);
     return this;
   }
 
@@ -68,13 +55,7 @@ public class CategoryDoc {
     this.ecp = ecp;
   }
 
-  public String getStore_id() {
-    return store_id;
-  }
 
-  public void setStore_id(String store_id) {
-    this.store_id = store_id;
-  }
 
   public String getPath() {
     return path;

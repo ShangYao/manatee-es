@@ -1,13 +1,25 @@
 package com.jinanlongen.manatee.domain;
 
 public class Ecp {
+  private String id;
   private String code;
   private String name;
 
-  public Ecp(String code, String name) {
+  public Ecp() {}
+
+  public Ecp(String id, String code, String name) {
     super();
+    this.id = id;
     this.code = code;
     this.name = name;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
   }
 
   public String getCode() {

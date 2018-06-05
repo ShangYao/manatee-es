@@ -22,7 +22,19 @@ public class ParController {
   public String synAll() {
     jd.synJdCategoryAttrs();
     sn.synSnCategoryAttrs();
-    return "执行中.........";
+    return "synAll执行中.........";
+  }
+
+  @RequestMapping("par/synSn")
+  public String synSn() {
+    sn.synSnCategoryAttrs();
+    return "synSn执行中.........";
+  }
+
+  @RequestMapping("par/synJd")
+  public String synJd() {
+    jd.synJdCategoryAttrs();
+    return "synJd执行中.........";
   }
 
 
@@ -36,6 +48,12 @@ public class ParController {
 
   @RequestMapping("par/count")
   public long count() {
+    return parRep.count();
+  }
+
+  @RequestMapping("par/deleteAll")
+  public long deleteAll() {
+    parRep.deleteAll();
     return parRep.count();
   }
 

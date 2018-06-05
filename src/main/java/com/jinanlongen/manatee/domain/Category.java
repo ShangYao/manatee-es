@@ -1,6 +1,7 @@
 package com.jinanlongen.manatee.domain;
 
 public class Category {
+  private String id;
   private String code;
   private String name;
   private String pcode;
@@ -8,6 +9,15 @@ public class Category {
   private String path;
 
 
+
+  public String getId() {
+    return id;
+  }
+
+  public Category setId(String id) {
+    this.id = id;
+    return this;
+  }
 
   public String getCode() {
     return code;
