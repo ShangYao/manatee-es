@@ -28,6 +28,9 @@ public class RepTest {
   CategoryStoreRep categoryStoreRep;
 
   @Test
+  public void testParRep2() {}
+
+  @Test
   public void testParRep() {
     Pageable pageable = PageRequest.of(0, 1500);
     Page<ParDoc> pars = parRep.getSaleAttr(pageable);

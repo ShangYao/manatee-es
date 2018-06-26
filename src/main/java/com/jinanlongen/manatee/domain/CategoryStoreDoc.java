@@ -6,7 +6,7 @@ import com.jd.open.api.sdk.domain.category.Category;
 import com.jinanlongen.manatee.enums.EcpEnum;
 import com.suning.api.entity.item.CategoryQueryResponse.CategoryQuery;
 
-@Document(indexName = "partest", type = "category_store")
+@Document(indexName = "par", type = "category_store")
 public class CategoryStoreDoc {
   @Id
   private String id;

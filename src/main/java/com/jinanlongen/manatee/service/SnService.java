@@ -52,10 +52,7 @@ public class SnService {
   // sn 类目属性
   @Async
   public void synSnCategoryAttrs() {
-    logger.info(Thread.currentThread().getName() + "----sn 类目属性------：>");
-    // List<CategoryDoc> docs = getSnAllCategoryDoc();
-    // Map<String, List<CategoryDoc>> map =
-    // docs.stream().collect(Collectors.groupingBy(i -> i.getStore_));
+    logger.info(Thread.currentThread().getName() + "----开始同步所有苏宁类目属性------：>");
     Pageable page = PageRequest.of(0, 2000);
     List<CategoryStoreDoc> cdList = categoryStoreRep.getSnCategoryStore(page).getContent();
     Map<String, List<CategoryDoc>> map = generateCategoryDocStore(cdList);

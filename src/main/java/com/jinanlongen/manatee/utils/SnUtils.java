@@ -44,9 +44,6 @@ public class SnUtils {
   }
 
   public SnUtils() {
-    // Shop shop = shopRep.findOne("31");
-    // this.appKey = shop.getAppKey();
-    // this.appSecret = shop.getAppSecret();
     this.client = new DefaultSuningClient(SERVER_URL, "5d051881034081888359fe086be163b9",
         "e06551b543ffca29e7686242e8a5838a");
   }

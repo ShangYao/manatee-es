@@ -57,7 +57,7 @@ public class CategoryController {
   public String deleteAll() {
     categoryRep.deleteAll();
     categoryStoreRep.deleteAll();
-    return "成功删除";
+    return "成功删除分类";
   }
 
 

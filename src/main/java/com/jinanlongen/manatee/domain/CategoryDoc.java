@@ -5,7 +5,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import com.jd.open.api.sdk.domain.category.Category;
 import com.suning.api.entity.item.CategoryQueryResponse.CategoryQuery;
 
-@Document(indexName = "partest", type = "category")
+@Document(indexName = "par", type = "category")
 public class CategoryDoc {
   @Id
   private String id;
