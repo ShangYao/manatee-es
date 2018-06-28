@@ -14,10 +14,8 @@ public class ParDoc {
   private String id;
   private String code;
   private String name;
-  private String par_type;// 1,关键属性(jd) ；2，不变属性(jd) ；3，可变属性(jd) ； 4，销售属性(jd) ；X，必填属性（sn）；可为空(sn)
+  private String par_type;// 1,关键属性(jd) ；2，不变属性(jd) ；3，可变属性(jd) ； 4，销售属性(jd) ；
   private String input_type;// 1,单选； 2，多选； 3，可输入
-  private String paraTemplateCode;
-  private String paraTemplateDesc;
   private boolean is_must;// ?
   private String unit;
 
@@ -40,7 +38,7 @@ public class ParDoc {
     this.code = categoryAttr.getCategoryAttrId() + "";
     this.name = categoryAttr.getAttName();
     this.input_type = categoryAttr.getInputType() + "";
-    this.par_type = categoryAttr.getAttributeType() + "";
+    this.par_type = categoryAttr.getAttributeType() == 4 ? "4" : "2";
     this.ecp = new Ecp("JD", "JD", "京东");
     // this.store = new StoreEs(store.getId(), store.getCode(), store.getName());
     this.category = new Category().setId(categoryDoc.getId()).setCode(categoryDoc.getCode())
@@ -87,8 +85,7 @@ public class ParDoc {
     this.is_must = (categoryAttr.getIsMust().equals("X")) ? true : false;
     this.unit = categoryAttr.getParUnit();
     this.ecp = new Ecp("SN", "SN", "苏宁");
-    this.paraTemplateCode = categoryAttr.getParaTemplateCode();
-    this.paraTemplateDesc = categoryAttr.getParaTemplateDesc();
+    this.par_type = (categoryAttr.getParaTemplateCode()).equals("common") ? "4" : "2";
     if (!categoryAttr.getParType().equals("3")) {
       this.values = generateParvalues(categoryAttr.getParOption());
     }
@@ -113,22 +110,6 @@ public class ParDoc {
   }
 
 
-
-  public String getParaTemplateCode() {
-    return paraTemplateCode;
-  }
-
-  public void setParaTemplateCode(String paraTemplateCode) {
-    this.paraTemplateCode = paraTemplateCode;
-  }
-
-  public String getParaTemplateDesc() {
-    return paraTemplateDesc;
-  }
-
-  public void setParaTemplateDesc(String paraTemplateDesc) {
-    this.paraTemplateDesc = paraTemplateDesc;
-  }
 
   public Category getCategory() {
     return category;
