@@ -23,6 +23,9 @@ import com.suning.api.entity.master.CityQueryResponse.City;
 import com.suning.api.entity.master.NationQueryRequest;
 import com.suning.api.entity.master.NationQueryResponse;
 import com.suning.api.entity.master.NationQueryResponse.Nation;
+import com.suning.api.entity.sale.FreighttemplateQueryRequest;
+import com.suning.api.entity.sale.FreighttemplateQueryResponse;
+import com.suning.api.entity.sale.FreighttemplateQueryResponse.QueryFreighttemplate;
 import com.suning.api.exception.SuningApiException;
 
 /**
@@ -182,5 +185,22 @@ public class SnUtils {
       e.printStackTrace();
     }
     return new ArrayList<City>();
+  }
+
+  public List<QueryFreighttemplate> getFreightTemplate() {
+    FreighttemplateQueryRequest request = new FreighttemplateQueryRequest();
+    request.setPageNo(1);
+    request.setPageSize(50);
+    // api入参校验逻辑开关，当测试稳定之后建议设置为 false 或者删除该行
+    request.setCheckParam(true);
+    try {
+      FreighttemplateQueryResponse response = client.excute(request);
+      logger.info(response.getBody());
+      return response.getSnbody().getQueryFreighttemplate();
+    } catch (SuningApiException e) {
+      e.printStackTrace();
+    }
+
+    return new ArrayList<QueryFreighttemplate>();
   }
 }

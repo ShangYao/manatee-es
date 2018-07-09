@@ -33,6 +33,12 @@ public class ParController {
     return "synAll执行中.........";
   }
 
+  @RequestMapping("par/sn/freight")
+  public String snFreight() {
+    sn.synFreight();
+    return "苏宁运费模版同步完成";
+  }
+
   @RequestMapping("par/synSn")
   public String synSn() {
     sn.synSnCategoryAttrs();

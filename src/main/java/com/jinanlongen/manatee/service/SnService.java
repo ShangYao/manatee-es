@@ -15,16 +15,19 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.jinanlongen.manatee.domain.CategoryDoc;
 import com.jinanlongen.manatee.domain.CategoryStoreDoc;
+import com.jinanlongen.manatee.domain.FreightDoc;
 import com.jinanlongen.manatee.domain.ParDoc;
 import com.jinanlongen.manatee.domain.Store;
 import com.jinanlongen.manatee.repository.CategoryRep;
 import com.jinanlongen.manatee.repository.CategoryStoreRep;
+import com.jinanlongen.manatee.repository.FreightRep;
 import com.jinanlongen.manatee.repository.ParRep;
 import com.jinanlongen.manatee.repository.ShopRep;
 import com.jinanlongen.manatee.utils.SnUtils;
 import com.suning.api.entity.item.CategoryQueryRequest;
 import com.suning.api.entity.item.CategoryQueryResponse.CategoryQuery;
 import com.suning.api.entity.item.ItemparametersQueryResponse.ItemparametersQuery;
+import com.suning.api.entity.sale.FreighttemplateQueryResponse.QueryFreighttemplate;
 
 @Service
 public class SnService {
@@ -36,7 +39,24 @@ public class SnService {
   @Autowired
   private ParRep parRep;
   @Autowired
+  private FreightRep freightRep;
+  @Autowired
   private CategoryStoreRep categoryStoreRep;
+
+  // 同步苏宁运费模版
+  public void synFreight() {
+    List<Store> list = shopRep.findSnShop();
+    for (Store store : list) {
+      SnUtils sn = new SnUtils(store);
+      List<QueryFreighttemplate> freights = sn.getFreightTemplate();
+      for (QueryFreighttemplate template : freights) {
+        FreightDoc doc = new FreightDoc().OfSn(template, store);
+        freightRep.save(doc);
+      }
+    }
+  }
+
+
 
   // 同步sn所有店铺的类目
   @Async
@@ -76,11 +96,9 @@ public class SnService {
         singleCategory.stream().collect(Collectors.groupingBy(i -> i.getStore_id()));
     Map<String, List<CategoryDoc>> categoryMap = new HashMap<>();
     Set<String> storeCodes = map.keySet();
-    List<CategoryDoc> CategoryDocs;// = new ArrayList<CategoryDoc>();
-    List<CategoryStoreDoc> CategoryStoreDocs;// = new ArrayList<CategoryStoreDoc>();
     for (String code : storeCodes) {
-      CategoryStoreDocs = map.get(code);
-      CategoryDocs = new ArrayList<CategoryDoc>();
+      List<CategoryStoreDoc> CategoryStoreDocs = map.get(code);
+      List<CategoryDoc> CategoryDocs = new ArrayList<CategoryDoc>();
       for (CategoryStoreDoc categoryStoreDoc : CategoryStoreDocs) {
         CategoryDocs.add((categoryRep.findById("SN#" + categoryStoreDoc.getCategory_code())).get());
       }
@@ -93,12 +111,10 @@ public class SnService {
     Store shop = shopRep.findById(storeId).get();
     logger.info("店铺{},同步类目{}", shop.getName(), list.size());
     SnUtils sn = new SnUtils(shop);
-    List<ItemparametersQuery> parameters;
-    ParDoc par;
     for (CategoryDoc categoryDoc : list) {
-      parameters = sn.itemparametersQuery(categoryDoc.getCode());
+      List<ItemparametersQuery> parameters = sn.itemparametersQuery(categoryDoc.getCode());
       for (ItemparametersQuery parameter : parameters) {
-        par = new ParDoc().parsFromSnAttrs(parameter, categoryDoc);
+        ParDoc par = new ParDoc().parsFromSnAttrs(parameter, categoryDoc);
         parRep.save(par);
       }
     }
@@ -109,23 +125,20 @@ public class SnService {
 
   private List<CategoryDoc> getSnAllCategoryDoc() {
     List<Store> list = shopRep.findSnShop();
-    SnUtils sn;
-    List<CategoryQuery> categoryList;
     List<CategoryDoc> allCategory = new ArrayList<CategoryDoc>();
     List<String> categoryIds = new ArrayList<String>();
-    CategoryQueryRequest request;
-    CategoryStoreDoc categoryStore;
     for (Store shop : list) {
-      sn = new SnUtils(shop);
-      request = new CategoryQueryRequest();
-      categoryList = sn.categoryQuery(request);
+      SnUtils sn = new SnUtils(shop);
+      CategoryQueryRequest request = new CategoryQueryRequest();
+      List<CategoryQuery> categoryList = sn.categoryQuery(request);
       logger.info("店铺{}开通类目{}", shop.getName(), categoryList.size());
       if (categoryList == null || categoryList.size() == 0) {
         logger.info("店铺{}无返回类目！", shop.getName());
         continue;
       } else {
         for (CategoryQuery category : categoryList) {
-          categoryStore = new CategoryStoreDoc().paseFromCategoryAndStore(category, shop);
+          CategoryStoreDoc categoryStore =
+              new CategoryStoreDoc().paseFromCategoryAndStore(category, shop);
           categoryStoreRep.save(categoryStore);// 保存店铺类目关系
           if (!categoryIds.contains(category.getCategoryCode())) {
             allCategory.add(new CategoryDoc().parseFromSnCategory(category));
