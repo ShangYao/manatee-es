@@ -13,17 +13,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import com.jinanlongen.manatee.domain.BrandDoc;
 import com.jinanlongen.manatee.domain.CategoryDoc;
 import com.jinanlongen.manatee.domain.CategoryStoreDoc;
 import com.jinanlongen.manatee.domain.FreightDoc;
 import com.jinanlongen.manatee.domain.ParDoc;
 import com.jinanlongen.manatee.domain.Store;
+import com.jinanlongen.manatee.repository.BrandRepo;
 import com.jinanlongen.manatee.repository.CategoryRep;
 import com.jinanlongen.manatee.repository.CategoryStoreRep;
 import com.jinanlongen.manatee.repository.FreightRep;
 import com.jinanlongen.manatee.repository.ParRep;
 import com.jinanlongen.manatee.repository.ShopRep;
 import com.jinanlongen.manatee.utils.SnUtils;
+import com.suning.api.entity.custom.NewbrandQueryResponse.QueryNewbrand;
 import com.suning.api.entity.item.CategoryQueryRequest;
 import com.suning.api.entity.item.CategoryQueryResponse.CategoryQuery;
 import com.suning.api.entity.item.ItemparametersQueryResponse.ItemparametersQuery;
@@ -39,9 +42,33 @@ public class SnService {
   @Autowired
   private ParRep parRep;
   @Autowired
+  private BrandRepo brandRepo;
+  @Autowired
   private FreightRep freightRep;
   @Autowired
   private CategoryStoreRep categoryStoreRep;
+
+  // 同步品牌
+  @Async
+  public void synBrand() {
+    logger.info(Thread.currentThread().getName() + "----开始同步所有苏宁类目属性------：>");
+    Pageable page = PageRequest.of(0, 2000);
+    List<CategoryStoreDoc> cdList = categoryStoreRep.getSnCategoryStore(page).getContent();
+    Map<String, List<CategoryStoreDoc>> map =
+        cdList.stream().collect(Collectors.groupingBy(i -> i.getStore_id()));
+    for (String storeId : map.keySet()) {
+      Store store = shopRep.findById(storeId).get();
+      SnUtils sn = new SnUtils(store);
+      for (CategoryStoreDoc categoryStoreDoc : map.get(storeId)) {
+        List<QueryNewbrand> snBrands = sn.brandQuery(categoryStoreDoc.getCategory_code());
+        for (QueryNewbrand queryNewbrand : snBrands) {
+          BrandDoc brand = BrandDoc.build(queryNewbrand, store, categoryStoreDoc);
+          brandRepo.save(brand);
+        }
+      }
+    }
+    logger.info(Thread.currentThread().getName() + "----完成------：>");
+  }
 
   // 同步苏宁运费模版
   public void synFreight() {

@@ -17,11 +17,14 @@ import org.springframework.stereotype.Service;
 import com.jd.open.api.sdk.domain.category.Category;
 import com.jd.open.api.sdk.domain.list.CategoryAttrReadService.CategoryAttr;
 import com.jd.open.api.sdk.domain.list.CategoryAttrValueReadService.CategoryAttrValueJos;
+import com.jd.open.api.sdk.response.list.VenderBrandPubInfo;
+import com.jinanlongen.manatee.domain.BrandDoc;
 import com.jinanlongen.manatee.domain.CategoryDoc;
 import com.jinanlongen.manatee.domain.CategoryStoreDoc;
 import com.jinanlongen.manatee.domain.ParDoc;
 import com.jinanlongen.manatee.domain.ParValue;
 import com.jinanlongen.manatee.domain.Store;
+import com.jinanlongen.manatee.repository.BrandRepo;
 import com.jinanlongen.manatee.repository.CategoryRep;
 import com.jinanlongen.manatee.repository.CategoryStoreRep;
 import com.jinanlongen.manatee.repository.ParRep;
@@ -38,7 +41,23 @@ public class JdService {
   @Autowired
   private ParRep parRep;
   @Autowired
+  private BrandRepo brandRepo;
+  @Autowired
   private CategoryStoreRep categoryStoreRep;
+
+  // 同步品牌
+  @Async
+  public void synBrand() {
+    List<Store> stores = shopRep.findJdShop();
+    for (Store store : stores) {
+      JdUtils jd = new JdUtils(store);
+      List<VenderBrandPubInfo> jdBrands = jd.queryBrand();
+      for (VenderBrandPubInfo venderBrandPubInfo : jdBrands) {
+        BrandDoc brand = BrandDoc.build(venderBrandPubInfo, store);
+        brandRepo.save(brand);
+      }
+    }
+  }
 
   // 同步jd所有店铺的类目
   @Async

@@ -66,4 +66,12 @@ public class Category {
     return this;
   }
 
+  public static Category build(CategoryStoreDoc categoryStoreDoc) {
+    Category category = new Category();
+    category.setId("SN#" + categoryStoreDoc.getCategory_code());
+    category.setCode(categoryStoreDoc.getCategory_code());
+    category.setName(categoryStoreDoc.getCategory_Name());
+    return category;
+  }
+
 }

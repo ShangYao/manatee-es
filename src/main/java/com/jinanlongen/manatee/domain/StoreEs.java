@@ -40,4 +40,12 @@ public class StoreEs {
     this.name = name;
   }
 
+  public static StoreEs build(Store store) {
+    StoreEs storeEs = new StoreEs();
+    storeEs.setId(store.getId());
+    storeEs.setCode(store.getCode());
+    storeEs.setName(store.getName());
+    return storeEs;
+  }
+
 }

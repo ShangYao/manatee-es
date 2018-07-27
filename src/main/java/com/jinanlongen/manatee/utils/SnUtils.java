@@ -71,11 +71,9 @@ public class SnUtils {
     request.setTargetChannel("1");
     request.setPageNo(1);
     request.setPageSize(50);
-    // api入参校验逻辑开关，当测试稳定之后建议设置为 false 或者删除该行
     request.setCheckParam(true);
     try {
       CategoryQueryResponse response = client.excute(request);
-      // logger.info("获取苏宁授权的采购目录信息，共{}条信息", response.getSnhead().getPageTotal());
       if (response.getSnhead().getPageTotal() == 1) {
         return response.getSnbody().getCategoryQueries();
       }
@@ -103,13 +101,24 @@ public class SnUtils {
    * 
    * @return
    */
-  public List<QueryNewbrand> brandQuery(NewbrandQueryRequest request) {
+  public List<QueryNewbrand> brandQuery(String categoryCode) {
+    NewbrandQueryRequest request = new NewbrandQueryRequest();
+    request.setCategoryCode(categoryCode);
     request.setPageNo(1);
     request.setPageSize(50);
     try {
       NewbrandQueryResponse response = client.excute(request);
-      logger.info("获取{}商品品牌信息{}条", request.getCategoryCode(), response.getSnhead().getTotalSize());
-      return response.getSnbody().getQueryNewbrand();
+      if (response.getSnhead().getPageTotal() == 1) {
+        return response.getSnbody().getQueryNewbrand();
+      }
+      List<QueryNewbrand> list = response.getSnbody().getQueryNewbrand();
+      for (int a = 2; a <= response.getSnhead().getPageTotal(); a++) {
+        request.setPageNo(a);
+        NewbrandQueryResponse nResponse = client.excute(request);
+        list.addAll(nResponse.getSnbody().getQueryNewbrand());
+      }
+      logger.info("{}:{}个品牌", categoryCode, list.size());
+      return list;
     } catch (SuningApiException e) {
       e.printStackTrace();
     }

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit4.SpringRunner;
 import com.jinanlongen.manatee.domain.CategoryStoreDoc;
 import com.jinanlongen.manatee.domain.ParDoc;
+import com.jinanlongen.manatee.repository.BrandRepo;
 import com.jinanlongen.manatee.repository.CategoryStoreRep;
 import com.jinanlongen.manatee.repository.ParRep;
 
@@ -25,10 +26,15 @@ public class RepTest {
   @Autowired
   ParRep parRep;
   @Autowired
+  BrandRepo brand;
+  @Autowired
   CategoryStoreRep categoryStoreRep;
 
   @Test
-  public void testParRep2() {}
+  public void testParRep2() {
+
+    // brand.deleteAll();
+  }
 
   @Test
   public void testParRep() {
